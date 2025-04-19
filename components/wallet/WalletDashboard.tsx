@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useWallet } from '@/contexts/wallet-context';
+import { useRouter } from 'next/navigation';
 
 export default function WalletDashboard() {
   const { wallet, isLoading, error, refreshWallet, createWallet, sendTransaction, requestFaucetFunds } = useWallet();
@@ -78,18 +79,18 @@ export default function WalletDashboard() {
     }
   };
   
-  // Helper function to truncate addresses
+  // Helper function to truncate Ethereum addresses
   const truncateAddress = (address: string) => {
     if (!address) return '';
-    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
   // Loading state
   if (isLoading) {
     return (
-      <div className="pixel-container bg-indigo-900 border-8 border-indigo-800 rounded-none shadow-[8px_8px_0px_0px_rgba(0,0,0,0.5)] max-w-md w-full mx-auto p-6">
+      <div className="bg-indigo-900 w-full mx-auto p-6 md:border-8 md:border-indigo-800 md:rounded-lg md:shadow-lg md:max-w-md">
         <div className="flex justify-center items-center h-48">
-          <div className="pixel-spinner h-16 w-16 animate-pulse"></div>
+          <div className="pixel-spinner h-16 w-16"></div>
         </div>
       </div>
     );
@@ -98,23 +99,18 @@ export default function WalletDashboard() {
   // No wallet yet - display wallet creation UI
   if (!wallet) {
     return (
-      <div className="pixel-container bg-indigo-900 border-8 border-indigo-800 rounded-none shadow-[8px_8px_0px_0px_rgba(0,0,0,0.5)] max-w-md w-full mx-auto">
+      <div className="bg-indigo-900 w-full mx-auto md:border-8 md:border-indigo-800 md:rounded-lg md:shadow-lg md:max-w-md">
         <div className="bg-purple-700 border-b-4 border-purple-900 p-4 text-white">
-          <div className="pixel-title text-center my-2">PIXIE WALLET</div>
-          <p className="text-center text-yellow-300 pixel-text">Powered by Coinbase CDP SDK</p>
+          {/* Removed the title here */}
         </div>
         
-        <div className="pixel-content p-6 flex flex-col items-center justify-center min-h-[300px]">
-          <div className="pixel-art mb-6">
-            <div className="chest-icon mx-auto"></div>
-          </div>
-          
-          <p className="text-center mb-6 text-yellow-300 pixel-text">
+        <div className="p-6 flex flex-col items-center justify-center min-h-[300px]">
+          <p className="text-center mb-6 text-yellow-300 font-pixel">
             Choose your wallet type to begin your adventure!
           </p>
           
           <div className="flex justify-center mb-6">
-            <div className="pixel-buttons-group" role="group">
+            <div className="inline-flex" role="group">
               <button
                 type="button"
                 onClick={() => setWalletCreationMode('eoa')}
@@ -142,12 +138,12 @@ export default function WalletDashboard() {
           
           <div className="mb-6">
             {walletCreationMode === 'eoa' ? (
-              <div className="bg-gray-800 border-4 border-yellow-500 p-3 text-white pixel-text">
+              <div className="bg-gray-800 border-4 border-yellow-500 p-3 text-white font-pixel">
                 A basic wallet with a single key.
                 <br/>Simple but powerful!
               </div>
             ) : (
-              <div className="bg-gray-800 border-4 border-blue-500 p-3 text-white pixel-text">
+              <div className="bg-gray-800 border-4 border-blue-500 p-3 text-white font-pixel">
                 An advanced wallet with special powers.
                 <br/>Contract-based magic!
               </div>
@@ -157,11 +153,11 @@ export default function WalletDashboard() {
           <button
             onClick={handleCreateWallet}
             disabled={creating}
-            className="pixel-button bg-green-500 hover:bg-green-600 text-white font-pixel px-8 py-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] disabled:opacity-50"
+            className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 shadow-lg disabled:opacity-50 rounded font-pixel pixel-button shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)]"
           >
             {creating ? 
               <span className="inline-flex items-center">
-                <span className="pixel-spinner-sm mr-2"></span> SUMMONING...
+                <span className="pixel-spinner-sm mr-2"></span> <span className="font-pixel">SUMMONING...</span>
               </span> : 
               `CREATE ${walletCreationMode === 'smart' ? 'SMART' : 'EOA'} WALLET`
             }
@@ -173,17 +169,16 @@ export default function WalletDashboard() {
 
   // Wallet exists - show wallet UI with tabs
   return (
-    <div className="pixel-container bg-indigo-900 border-8 border-indigo-800 rounded-none shadow-[8px_8px_0px_0px_rgba(0,0,0,0.5)] max-w-md w-full mx-auto">
+    <div className="bg-indigo-900 w-full mx-auto md:border-8 md:border-indigo-800 md:rounded-lg md:shadow-lg md:max-w-md">
       <div className="bg-purple-700 border-b-4 border-purple-900 p-4 text-white">
-        <div className="pixel-title text-center my-2">PIXIE WALLET</div>
-        <p className="text-center text-yellow-300 pixel-text">Powered by Coinbase CDP SDK</p>
+        {/* Removed the title here */}
       </div>
 
       <div className="flex border-b-4 border-indigo-700">
         <button
-          className={`flex-1 py-3 font-pixel uppercase ${
+          className={`flex-1 py-3 uppercase font-pixel ${
             activeTab === 'wallet'
-              ? 'bg-purple-600 text-yellow-300 border-b-4 border-purple-800'
+              ? 'bg-purple-600 text-yellow-300'
               : 'bg-indigo-800 text-gray-300 hover:bg-indigo-700'
           }`}
           onClick={() => setActiveTab('wallet')}
@@ -191,9 +186,9 @@ export default function WalletDashboard() {
           Wallet
         </button>
         <button
-          className={`flex-1 py-3 font-pixel uppercase ${
+          className={`flex-1 py-3 uppercase font-pixel ${
             activeTab === 'send'
-              ? 'bg-purple-600 text-yellow-300 border-b-4 border-purple-800'
+              ? 'bg-purple-600 text-yellow-300'
               : 'bg-indigo-800 text-gray-300 hover:bg-indigo-700'
           }`}
           onClick={() => setActiveTab('send')}
@@ -201,9 +196,9 @@ export default function WalletDashboard() {
           Send
         </button>
         <button
-          className={`flex-1 py-3 font-pixel uppercase ${
+          className={`flex-1 py-3 uppercase font-pixel ${
             activeTab === 'activity'
-              ? 'bg-purple-600 text-yellow-300 border-b-4 border-purple-800'
+              ? 'bg-purple-600 text-yellow-300'
               : 'bg-indigo-800 text-gray-300 hover:bg-indigo-700'
           }`}
           onClick={() => setActiveTab('activity')}
@@ -215,36 +210,36 @@ export default function WalletDashboard() {
       <div className="p-4">
         {activeTab === 'wallet' && (
           <div className="space-y-4">
-            <div className="bg-gray-800 border-4 border-gray-700 rounded-none p-4">
+            <div className="bg-gray-800 border-4 border-gray-700 p-4">
               <div className="flex justify-between items-center mb-2">
                 <div className="flex items-center">
                   <h3 className="text-sm font-pixel text-yellow-300">ADDRESS</h3>
                   {wallet.type === 'smart' && (
-                    <span className="ml-2 px-2 py-0.5 bg-blue-900 text-blue-300 text-xs border-2 border-blue-800">
+                    <span className="ml-2 px-2 py-0.5 bg-blue-900 text-blue-300 text-xs border-2 border-blue-800 font-pixel">
                       SMART CONTRACT
                     </span>
                   )}
                 </div>
                 <button 
-                  className="text-green-400 text-sm bg-gray-900 border-2 border-gray-700 px-2 py-1 hover:bg-gray-800"
+                  className="text-green-400 text-sm bg-gray-900 border-2 border-gray-700 px-2 py-1 hover:bg-gray-800 font-pixel"
                   onClick={() => navigator.clipboard.writeText(wallet.address)}
                 >
                   Copy
                 </button>
               </div>
-              <p className="text-green-400 break-all text-sm font-mono bg-gray-900 border-2 border-gray-700 p-2 font-pixel tracking-tighter leading-tight">
-                {wallet.address}
-              </p>
+              <div className="break-all text-sm mb-4 font-pixel">
+                {wallet.address ? truncateAddress(wallet.address) : 'No wallet connected'}
+              </div>
               
               {wallet.type === 'smart' && wallet.ownerAddress && (
                 <div className="mt-3">
                   <h3 className="text-sm font-pixel text-yellow-300">OWNER ACCOUNT</h3>
                   <div className="flex justify-between items-center">
-                    <p className="text-green-400 text-xs break-all font-mono bg-gray-900 border-2 border-gray-700 p-2 flex-1 font-pixel tracking-tighter leading-tight">
-                      {wallet.ownerAddress}
+                    <p className="text-green-400 text-xs font-pixel bg-gray-900 border-2 border-gray-700 p-2 flex-1 tracking-tighter leading-tight">
+                      {truncateAddress(wallet.ownerAddress)}
                     </p>
                     <button 
-                      className="text-green-400 text-xs bg-gray-900 border-2 border-gray-700 px-2 py-1 hover:bg-gray-800 ml-2"
+                      className="text-green-400 text-xs bg-gray-900 border-2 border-gray-700 px-2 py-1 hover:bg-gray-800 ml-2 font-pixel"
                       onClick={() => navigator.clipboard.writeText(wallet.ownerAddress || '')}
                     >
                       Copy
@@ -263,12 +258,12 @@ export default function WalletDashboard() {
               <div className="mt-6">
                 <h3 className="text-sm font-pixel text-yellow-300">BALANCE</h3>
                 <div className="flex items-end">
-                  <p className="text-2xl font-bold font-pixel text-white mt-1 pixel-glow">
+                  <p className="text-2xl font-bold text-white mt-1 text-glow font-pixel">
                     {wallet.balance || '0.0'} ETH
                   </p>
                   <button 
                     onClick={refreshWallet}
-                    className="ml-2 text-xs bg-gray-900 border-2 border-gray-700 px-2 py-1 text-blue-400 hover:bg-gray-800"
+                    className="ml-2 text-xs bg-gray-900 border-2 border-gray-700 px-2 py-1 text-blue-400 hover:bg-gray-800 font-pixel"
                     disabled={isLoading}
                   >
                     {isLoading ? '...' : '↻'}
@@ -280,7 +275,7 @@ export default function WalletDashboard() {
                   <button
                     onClick={handleRequestFaucet}
                     disabled={isLoading || requestingFunds}
-                    className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white border-b-4 border-green-800 disabled:opacity-50 text-sm font-pixel flex justify-center items-center"
+                    className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 text-sm flex justify-center items-center rounded font-pixel pixel-button"
                   >
                     {requestingFunds ? (
                       <>
@@ -293,13 +288,13 @@ export default function WalletDashboard() {
                   </button>
                   
                   {faucetMessage && (
-                    <div className="mt-2 text-sm text-green-300 bg-green-900 border-2 border-green-800 p-2 pixel-text">
+                    <div className="mt-2 text-sm text-green-300 bg-green-900 border-2 border-green-800 p-2 font-pixel">
                       {faucetMessage}
                     </div>
                   )}
                   
                   {faucetError && (
-                    <div className="mt-2 text-sm text-red-300 bg-red-900 border-2 border-red-800 p-2 pixel-text">
+                    <div className="mt-2 text-sm text-red-300 bg-red-900 border-2 border-red-800 p-2 font-pixel">
                       {faucetError}
                     </div>
                   )}
@@ -309,7 +304,7 @@ export default function WalletDashboard() {
 
             {wallet.type === 'smart' && (
               <div className="bg-blue-900 border-4 border-blue-800 p-3">
-                <p className="text-sm text-blue-300 pixel-text">
+                <p className="text-sm text-blue-300 font-pixel">
                   This is a magical contract wallet on Base Sepolia with special powers! It can batch spells and provide gas for your adventures.
                 </p>
               </div>
@@ -345,31 +340,37 @@ export default function WalletDashboard() {
                   placeholder="0.0"
                   min="0"
                   step="0.000001"
-                  className="w-full p-2 border-4 border-gray-700 bg-gray-900 text-green-400 font-mono"
+                  className="w-full p-2 border-4 border-gray-700 bg-gray-900 text-green-400 font-mono font-pixel"
                 />
               </div>
             </div>
             <button
               onClick={handleSendTransaction}
               disabled={sendingTx || !recipientAddress || !amount}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white border-b-4 border-blue-800 disabled:opacity-50 font-pixel"
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 font-pixel rounded pixel-button"
             >
-              {sendingTx ? 'CASTING SPELL...' : 'SEND COINS'}
+              {sendingTx ? 
+                <span className="inline-flex items-center justify-center">
+                  <span className="pixel-spinner-sm mr-2"></span>
+                  SENDING...
+                </span> : 
+                'SEND COINS'
+              }
             </button>
             
             {txHash && (
               <div className="mt-4 p-3 bg-green-900 border-4 border-green-800">
-                <p className="text-green-300 text-sm pixel-text">
+                <p className="text-green-300 text-sm font-pixel">
                   ✨ Transaction sent! Hash:
                 </p>
-                <p className="text-green-300 text-xs font-mono font-pixel tracking-tighter leading-tight break-all mt-2 bg-green-950 p-2 border-2 border-green-800">
-                  {txHash}
+                <p className="text-green-300 text-xs font-pixel font-mono tracking-tighter leading-tight break-all mt-2 bg-green-950 p-2 border-2 border-green-800">
+                  {truncateAddress(txHash)}
                 </p>
                 <a 
                   href={`https://sepolia.basescan.org/tx/${txHash}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-300 hover:text-blue-200 text-xs mt-3 block pixel-text underline"
+                  className="text-blue-300 hover:text-blue-200 text-xs mt-3 block underline font-pixel"
                 >
                   View on BaseScan
                 </a>
@@ -378,7 +379,7 @@ export default function WalletDashboard() {
             
             {txError && (
               <div className="mt-4 p-3 bg-red-900 border-4 border-red-800">
-                <p className="text-red-300 text-sm pixel-text">
+                <p className="text-red-300 text-sm font-pixel">
                   Error: {txError}
                 </p>
               </div>
@@ -386,7 +387,7 @@ export default function WalletDashboard() {
             
             {wallet.type === 'smart' && (
               <div className="mt-4 p-3 bg-blue-900 border-4 border-blue-800">
-                <p className="text-sm text-blue-300 pixel-text">
+                <p className="text-sm text-blue-300 font-pixel">
                   Smart Contract wallets cast spells using the UserOperation protocol for maximum magic efficiency.
                 </p>
               </div>
@@ -396,90 +397,23 @@ export default function WalletDashboard() {
 
         {activeTab === 'activity' && (
           <div className="p-6 flex justify-center items-center h-60 bg-gray-800 border-4 border-gray-700">
-            <div className="pixel-text text-center">
-              <div className="scroll-icon mx-auto mb-4"></div>
-              <p className="text-yellow-300">Your adventure log will appear here</p>
+            <div className="text-center">
+              <div className="mx-auto mb-4 h-12 w-12 opacity-50 border-4 border-yellow-500 rounded-full"></div>
+              <p className="text-yellow-300 font-pixel">Your adventure log will appear here</p>
             </div>
           </div>
         )}
       </div>
 
       {error && (
-        <div className="p-4 mt-4 bg-red-900 border-4 border-red-800 text-red-300 text-sm pixel-text">
+        <div className="p-4 mt-4 bg-red-900 border-4 border-red-800 text-red-300 text-sm font-pixel">
           Error: {error}
         </div>
       )}
 
       <style jsx>{`
-        .pixel-container {
-          image-rendering: pixelated;
-        }
-        .pixel-title {
-          font-family: 'Press Start 2P', system-ui, sans-serif;
-          font-size: 1.5rem;
-          line-height: 1.5;
-          letter-spacing: 0.05em;
-          color: #FFD700;
-          text-shadow: 3px 3px 0px #000;
-        }
-        .pixel-text {
-          font-family: 'Press Start 2P', monospace;
-          font-size: 0.7rem;
-          line-height: 1.5;
-        }
-        .font-pixel {
-          font-family: 'Press Start 2P', monospace;
-          font-size: 0.7rem;
-          line-height: 1.5;
-        }
-        .pixel-glow {
+        .text-glow {
           text-shadow: 0 0 5px #7DF9FF, 0 0 10px #7DF9FF;
-        }
-        
-        .pixel-button {
-          transition: all 0.1s;
-          position: relative;
-          top: 0;
-        }
-        
-        .pixel-button:active {
-          top: 4px;
-          box-shadow: 0px 0px 0px 0px rgba(0,0,0,0.5);
-        }
-        
-        .pixel-spinner {
-          width: 32px;
-          height: 32px;
-          background-image: url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='6' y='3' width='4' height='4' fill='white'/%3E%3Crect x='10' y='3' width='4' height='4' fill='white'/%3E%3Crect x='14' y='3' width='4' height='4' fill='white'/%3E%3Crect x='18' y='3' width='4' height='4' fill='white'/%3E%3Crect x='22' y='3' width='4' height='4' fill='white'/%3E%3Crect x='22' y='7' width='4' height='4' fill='white'/%3E%3Crect x='22' y='11' width='4' height='4' fill='white'/%3E%3Crect x='22' y='15' width='4' height='4' fill='white'/%3E%3Crect x='22' y='19' width='4' height='4' fill='white'/%3E%3Crect x='22' y='23' width='4' height='4' fill='white'/%3E%3Crect x='18' y='23' width='4' height='4' fill='white'/%3E%3Crect x='14' y='23' width='4' height='4' fill='white'/%3E%3Crect x='10' y='23' width='4' height='4' fill='white'/%3E%3Crect x='6' y='23' width='4' height='4' fill='white'/%3E%3Crect x='6' y='19' width='4' height='4' fill='white'/%3E%3Crect x='6' y='15' width='4' height='4' fill='white'/%3E%3Crect x='6' y='11' width='4' height='4' fill='white'/%3E%3Crect x='6' y='7' width='4' height='4' fill='white'/%3E%3C/svg%3E");
-          background-repeat: no-repeat;
-          animation: spin 1s steps(8) infinite;
-        }
-        
-        .pixel-spinner-sm {
-          width: 16px;
-          height: 16px;
-          background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='3' y='1' width='2' height='2' fill='white'/%3E%3Crect x='5' y='1' width='2' height='2' fill='white'/%3E%3Crect x='7' y='1' width='2' height='2' fill='white'/%3E%3Crect x='9' y='1' width='2' height='2' fill='white'/%3E%3Crect x='11' y='1' width='2' height='2' fill='white'/%3E%3Crect x='11' y='3' width='2' height='2' fill='white'/%3E%3Crect x='11' y='5' width='2' height='2' fill='white'/%3E%3Crect x='11' y='7' width='2' height='2' fill='white'/%3E%3Crect x='11' y='9' width='2' height='2' fill='white'/%3E%3Crect x='11' y='11' width='2' height='2' fill='white'/%3E%3Crect x='9' y='11' width='2' height='2' fill='white'/%3E%3Crect x='7' y='11' width='2' height='2' fill='white'/%3E%3Crect x='5' y='11' width='2' height='2' fill='white'/%3E%3Crect x='3' y='11' width='2' height='2' fill='white'/%3E%3Crect x='3' y='9' width='2' height='2' fill='white'/%3E%3Crect x='3' y='7' width='2' height='2' fill='white'/%3E%3Crect x='3' y='5' width='2' height='2' fill='white'/%3E%3Crect x='3' y='3' width='2' height='2' fill='white'/%3E%3C/svg%3E");
-          background-repeat: no-repeat;
-          animation: spin 1s steps(8) infinite;
-        }
-        
-        .chest-icon {
-          width: 64px;
-          height: 64px;
-          background-image: url("data:image/svg+xml,%3Csvg width='64' height='64' viewBox='0 0 64 64' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='16' y='32' width='32' height='16' fill='%23A86432'/%3E%3Crect x='16' y='24' width='32' height='8' fill='%238B5524'/%3E%3Crect x='20' y='28' width='24' height='4' fill='%23FFD700'/%3E%3Crect x='28' y='36' width='8' height='8' fill='%23FFD700'/%3E%3Crect x='20' y='44' width='24' height='4' fill='%23C87137'/%3E%3Crect x='16' y='48' width='32' height='4' fill='%23B96331'/%3E%3C/svg%3E");
-          background-repeat: no-repeat;
-        }
-        
-        .scroll-icon {
-          width: 48px;
-          height: 48px;
-          background-image: url("data:image/svg+xml,%3Csvg width='48' height='48' viewBox='0 0 48 48' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='12' y='8' width='24' height='32' fill='%23F0E6D2'/%3E%3Crect x='12' y='8' width='24' height='4' fill='%23BFA76F'/%3E%3Crect x='12' y='36' width='24' height='4' fill='%23BFA76F'/%3E%3Crect x='16' y='16' width='16' height='2' fill='%23998456'/%3E%3Crect x='16' y='20' width='16' height='2' fill='%23998456'/%3E%3Crect x='16' y='24' width='8' height='2' fill='%23998456'/%3E%3C/svg%3E");
-          background-repeat: no-repeat;
-        }
-        
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
         }
       `}</style>
     </div>
