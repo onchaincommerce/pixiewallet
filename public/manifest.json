@@ -1,0 +1,23 @@
+{
+  "name": "Pixie Wallet",
+  "short_name": "Pixie Wallet",
+  "description": "An embedded EVM smart wallet powered by Coinbase CDP SDK",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#312e81",
+  "theme_color": "#312e81",
+  "icons": [
+    {
+      "src": "/fairy.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/fairy.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+} 
