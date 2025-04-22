@@ -20,7 +20,10 @@ interface Wallet {
 
 type WalletContextType = {
   wallet: Wallet | null;
-  isLoading: boolean;
+  isLoading: boolean;  // General loading state for wallet initialization
+  isRefreshing: boolean; // For balance refreshes
+  isTransacting: boolean; // For transaction operations 
+  isFauceting: boolean; // For faucet operations
   error: string | null;
   refreshWallet: () => Promise<void>;
   createWallet: (type: WalletType) => Promise<void>;
@@ -34,6 +37,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isTransacting, setIsTransacting] = useState(false);
+  const [isFauceting, setIsFauceting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   const supabase = createBrowserSupabaseClient();
@@ -96,7 +102,12 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   };
 
   const refreshWallet = async () => {
-    await fetchWallet();
+    setIsRefreshing(true);
+    try {
+      await fetchWallet();
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   // Function to send transaction from the current wallet
@@ -105,7 +116,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       return { success: false, error: 'No wallet available' };
     }
 
-    setIsLoading(true);
+    setIsTransacting(true);
     try {
       const result = await sendTransactionService(
         wallet.address,
@@ -144,7 +155,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         error: err.message || 'Failed to send transaction' 
       };
     } finally {
-      setIsLoading(false);
+      setIsTransacting(false);
     }
   };
 
@@ -154,7 +165,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       return { success: false, error: 'No wallet available' };
     }
 
-    setIsLoading(true);
+    setIsFauceting(true);
     try {
       const result = await requestFaucet(
         wallet.address,
@@ -185,7 +196,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         error: err.message || 'Failed to request faucet funds' 
       };
     } finally {
-      setIsLoading(false);
+      setIsFauceting(false);
     }
   };
 
@@ -218,7 +229,10 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   return (
     <WalletContext.Provider value={{ 
       wallet, 
-      isLoading, 
+      isLoading,
+      isRefreshing,
+      isTransacting,
+      isFauceting,
       error, 
       refreshWallet, 
       createWallet,

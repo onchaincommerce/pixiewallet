@@ -11,7 +11,7 @@ import { isPwaMode, isMobileDevice } from '@/lib/site-config';
 
 // Enhanced WalletDashboard component with full functionality
 const WalletDashboard = () => {
-  const { wallet, isLoading, error, refreshWallet, createWallet, sendTransaction, requestFaucetFunds } = useWallet();
+  const { wallet, isLoading, isRefreshing, isTransacting, isFauceting, error, refreshWallet, createWallet, sendTransaction, requestFaucetFunds } = useWallet();
   const [activeTab, setActiveTab] = useState('wallet');
   const [walletCreationMode, setWalletCreationMode] = useState<'eoa' | 'smart'>('smart');
   const [creating, setCreating] = useState(false);
@@ -91,8 +91,8 @@ const WalletDashboard = () => {
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   };
 
-  // Loading state
-  if (isLoading) {
+  // Loading state - only for initial wallet load when no wallet exists
+  if (isLoading && !wallet) {
     return (
       <div className="bg-indigo-900 w-full mx-auto p-6 md:border-8 md:border-indigo-800 md:rounded-lg md:shadow-lg md:max-w-md">
         <div className="flex justify-center items-center h-48">
@@ -175,9 +175,9 @@ const WalletDashboard = () => {
 
   // Wallet exists - show wallet UI with tabs
   return (
-    <div className="bg-indigo-900 w-full mx-auto md:border-8 md:border-indigo-800 md:rounded-lg md:shadow-lg md:max-w-md">
+    <div className="bg-indigo-900 w-full mx-auto md:border-8 md:border-indigo-800 md:rounded-lg md:shadow-lg md:max-w-md relative">
       <div className="bg-purple-700 border-b-4 border-purple-900 p-4 text-white">
-        {/* Remove title here since it's already in the page header */}
+        {/* Removed the title here */}
       </div>
 
       <div className="flex border-b-4 border-indigo-700">
@@ -262,7 +262,7 @@ const WalletDashboard = () => {
               </div>
               
               <div className="mt-6">
-                <h3 className="text-sm text-yellow-300 font-pixel">BALANCE</h3>
+                <h3 className="text-sm font-pixel text-yellow-300">BALANCE</h3>
                 <div className="flex items-end">
                   <p className="text-2xl font-bold text-white mt-1 text-glow font-pixel">
                     {wallet.balance || '0.0'} ETH
@@ -270,22 +270,27 @@ const WalletDashboard = () => {
                   <button 
                     onClick={refreshWallet}
                     className="ml-2 text-xs bg-gray-900 border-2 border-gray-700 px-2 py-1 text-blue-400 hover:bg-gray-800 font-pixel"
-                    disabled={isLoading}
+                    disabled={isRefreshing}
                   >
-                    {isLoading ? '...' : '↻'}
+                    {isRefreshing ? 
+                      <span className="inline-flex items-center">
+                        <span className="animate-spin h-3 w-3 border-2 border-blue-500 rounded-full border-t-transparent"></span>
+                      </span> : 
+                      '↻'
+                    }
                   </button>
                 </div>
                 
-                {/* Faucet Button */}
+                {/* Add Faucet Button */}
                 <div className="mt-4">
                   <button
                     onClick={handleRequestFaucet}
-                    disabled={isLoading || requestingFunds}
-                    className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 text-sm flex justify-center items-center rounded font-pixel"
+                    disabled={requestingFunds || isFauceting}
+                    className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 text-sm flex justify-center items-center rounded font-pixel pixel-button"
                   >
-                    {requestingFunds ? (
+                    {requestingFunds || isFauceting ? (
                       <>
-                        <span className="animate-spin h-4 w-4 mr-2 border-2 border-white rounded-full border-t-transparent"></span>
+                        <span className="pixel-spinner-sm mr-2"></span>
                         REQUESTING...
                       </>
                     ) : (
@@ -352,12 +357,12 @@ const WalletDashboard = () => {
             </div>
             <button
               onClick={handleSendTransaction}
-              disabled={sendingTx || !recipientAddress || !amount}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 rounded font-pixel"
+              disabled={sendingTx || isTransacting || !recipientAddress || !amount}
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 font-pixel rounded pixel-button"
             >
-              {sendingTx ? 
+              {sendingTx || isTransacting ? 
                 <span className="inline-flex items-center justify-center">
-                  <span className="animate-spin h-4 w-4 mr-2 border-2 border-white rounded-full border-t-transparent"></span>
+                  <span className="pixel-spinner-sm mr-2"></span>
                   SENDING...
                 </span> : 
                 'SEND COINS'
@@ -428,7 +433,7 @@ const WalletDashboard = () => {
 
 export default function DashboardPage() {
   const { user, isLoading: authLoading, signOut } = useAuth();
-  const { } = useWallet();
+  const { wallet, isLoading: walletLoading, isRefreshing, isTransacting, isFauceting } = useWallet();
   const router = useRouter();
   const [processingAuth, setProcessingAuth] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -492,7 +497,8 @@ export default function DashboardPage() {
     }
   }, [user, authLoading, processingAuth, router]);
 
-  if (authLoading || processingAuth) {
+  // Only show the loading screen for initial auth/user loading, not for wallet operations
+  if ((authLoading || processingAuth) && !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-indigo-950 pixel-pattern">
         <div className="text-center">

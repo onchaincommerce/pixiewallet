@@ -5,7 +5,7 @@ import { useWallet } from '@/contexts/wallet-context';
 import { useRouter } from 'next/navigation';
 
 export default function WalletDashboard() {
-  const { wallet, isLoading, error, refreshWallet, createWallet, sendTransaction, requestFaucetFunds } = useWallet();
+  const { wallet, isLoading, isRefreshing, isTransacting, isFauceting, error, refreshWallet, createWallet, sendTransaction, requestFaucetFunds } = useWallet();
   const [activeTab, setActiveTab] = useState('wallet');
   const [walletCreationMode, setWalletCreationMode] = useState<'eoa' | 'smart'>('smart');
   const [creating, setCreating] = useState(false);
@@ -85,8 +85,8 @@ export default function WalletDashboard() {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
-  // Loading state
-  if (isLoading) {
+  // Full screen loading state only for initial wallet load
+  if (isLoading && !wallet) {
     return (
       <div className="bg-indigo-900 w-full mx-auto p-6 md:border-8 md:border-indigo-800 md:rounded-lg md:shadow-lg md:max-w-md">
         <div className="flex justify-center items-center h-48">
@@ -152,10 +152,10 @@ export default function WalletDashboard() {
           
           <button
             onClick={handleCreateWallet}
-            disabled={creating}
+            disabled={creating || isLoading}
             className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 shadow-lg disabled:opacity-50 rounded font-pixel pixel-button shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)]"
           >
-            {creating ? 
+            {creating || isLoading ? 
               <span className="inline-flex items-center">
                 <span className="pixel-spinner-sm mr-2"></span> <span className="font-pixel">SUMMONING...</span>
               </span> : 
@@ -169,7 +169,7 @@ export default function WalletDashboard() {
 
   // Wallet exists - show wallet UI with tabs
   return (
-    <div className="bg-indigo-900 w-full mx-auto md:border-8 md:border-indigo-800 md:rounded-lg md:shadow-lg md:max-w-md">
+    <div className="bg-indigo-900 w-full mx-auto md:border-8 md:border-indigo-800 md:rounded-lg md:shadow-lg md:max-w-md relative">
       <div className="bg-purple-700 border-b-4 border-purple-900 p-4 text-white">
         {/* Removed the title here */}
       </div>
@@ -264,9 +264,14 @@ export default function WalletDashboard() {
                   <button 
                     onClick={refreshWallet}
                     className="ml-2 text-xs bg-gray-900 border-2 border-gray-700 px-2 py-1 text-blue-400 hover:bg-gray-800 font-pixel"
-                    disabled={isLoading}
+                    disabled={isRefreshing}
                   >
-                    {isLoading ? '...' : '↻'}
+                    {isRefreshing ? 
+                      <span className="inline-flex items-center">
+                        <span className="animate-spin h-3 w-3 border-2 border-blue-500 rounded-full border-t-transparent"></span>
+                      </span> : 
+                      '↻'
+                    }
                   </button>
                 </div>
                 
@@ -274,10 +279,10 @@ export default function WalletDashboard() {
                 <div className="mt-4">
                   <button
                     onClick={handleRequestFaucet}
-                    disabled={isLoading || requestingFunds}
+                    disabled={requestingFunds || isFauceting}
                     className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 text-sm flex justify-center items-center rounded font-pixel pixel-button"
                   >
-                    {requestingFunds ? (
+                    {requestingFunds || isFauceting ? (
                       <>
                         <span className="pixel-spinner-sm mr-2"></span>
                         REQUESTING...
@@ -346,10 +351,10 @@ export default function WalletDashboard() {
             </div>
             <button
               onClick={handleSendTransaction}
-              disabled={sendingTx || !recipientAddress || !amount}
+              disabled={sendingTx || isTransacting || !recipientAddress || !amount}
               className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 font-pixel rounded pixel-button"
             >
-              {sendingTx ? 
+              {sendingTx || isTransacting ? 
                 <span className="inline-flex items-center justify-center">
                   <span className="pixel-spinner-sm mr-2"></span>
                   SENDING...

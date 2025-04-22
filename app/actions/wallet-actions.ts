@@ -1,8 +1,9 @@
 'use server';
 
 import { initCdpClient, defaultNetworkId } from '../lib/wallet/cdp-client';
-import { createPublicClient, http } from 'viem';
+import { createPublicClient, http, createWalletClient, parseEther } from 'viem';
 import { baseSepolia } from 'viem/chains';
+import { toAccount } from 'viem/accounts';
 // Unused imports commented out but preserved for future reference
 // import { createWalletClient } from 'viem';
 // import { toAccount } from 'viem/accounts';
@@ -317,22 +318,11 @@ export async function sendTransaction(
           throw error;
         }
       } else {
-        // Regular EOA transaction using CDP's sendTransaction method
-        console.log(`[${new Date().toISOString()}] 🔑 Processing EOA transaction via Coinbase CDP API`);
-        console.log(`[${new Date().toISOString()}] 📋 From: ${from}, To: ${to}, Amount: ${amountInWei.toString()} wei`);
+        // Regular EOA transaction using viem + CDP
+        console.log(`[${new Date().toISOString()}] 🔑 Processing EOA transaction via viem with Coinbase CDP API`);
+        console.log(`[${new Date().toISOString()}] 📋 From: ${from}, To: ${to}, Amount: ${amount} ETH`);
         
         try {
-          // Currently, EOA transaction functionality is not fully implemented
-          // Return a friendly error message instead of attempting to process
-          console.log(`[${new Date().toISOString()}] ⚠️ EOA transactions not fully implemented yet`);
-          
-          return {
-            success: false,
-            error: "Direct EOA transactions are coming soon. Please use a Smart Wallet for now.",
-          };
-          
-          /* 
-          // The following code is commented out until the API is fixed
           // Get the CDP account object
           console.log(`[${new Date().toISOString()}] 🔍 Retrieving account from CDP API: ${from}`);
           const account = await cdp.evm.getAccount({
@@ -345,31 +335,36 @@ export async function sendTransaction(
           
           console.log(`[${new Date().toISOString()}] ✅ CDP account retrieved via API, preparing transaction`);
           
-          // Get current nonce for the account - commented out as unused but may be needed later
-          // const nonce = await publicClient.getTransactionCount({ address: from });
-          
-          // Use CDP's sendTransaction method directly
-          console.log(`[${new Date().toISOString()}] 📝 Sending transaction via CDP API`);
-          const txHash = await cdp.evm.signTransaction({
-            account: account.id,
-            to,
-            value: amountInWei,
-            network: defaultNetworkId as "base-sepolia"
+          // Create wallet client with CDP account - using type assertion to bypass compatibility issues
+          console.log(`[${new Date().toISOString()}] 🔧 Creating viem wallet client`);
+          const walletClient = createWalletClient({
+            account: toAccount(account as any),
+            chain: baseSepolia,
+            transport: http(BASE_SEPOLIA_RPC),
           });
           
-          console.log(`[${new Date().toISOString()}] ✅ Transaction sent successfully: ${txHash}`);
+          // Send transaction
+          console.log(`[${new Date().toISOString()}] 📝 Sending transaction via viem wallet client`);
+          const hash = await walletClient.sendTransaction({
+            to,
+            value: parseEther(amount),
+          });
+          
+          console.log(`[${new Date().toISOString()}] ✅ Transaction sent successfully: ${hash}`);
           
           return {
             success: true,
-            transactionHash: txHash,
+            transactionHash: hash,
             from,
             to,
             amount,
           };
-          */
         } catch (error: unknown) {
-          console.error(`[${new Date().toISOString()}] ❌ EOA transaction error with CDP API:`, error);
-          throw error;
+          console.error(`[${new Date().toISOString()}] ❌ EOA transaction error:`, error);
+          return {
+            success: false,
+            error: getErrorMessage(error) || 'Transaction failed',
+          };
         }
       }
     } catch (error: unknown) {
